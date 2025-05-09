@@ -1,3 +1,4 @@
+library("stringr")
 Q02 <- data.frame(matrix(NA, nrow = nrow(CHANGED_ALL_M003_JE_JU), ncol = 4))
 
 for(row in 1:nrow(CHANGED_ALL_M003_JE_JU)){
@@ -16,23 +17,7 @@ datum <- paste(substr(Sys.Date(), 1, 4), substr(Sys.Date(), 6, 7), substr(Sys.Da
 
 for(row in 1:nrow(CHANGED_ALL_M003_JE_JU)){
   
-  if(nchar(row) == 1){
-    
-    KSHTORZS <- paste("000000", row, sep = "")
-    
-  }else if(nchar(row) == 2){
-    
-    KSHTORZS <- paste("00000", row, sep = "")
-    
-  }else if(nchar(row) == 3){
-    
-    KSHTORZS <- paste("0000", row, sep = "")
-    
-  }else if(nchar(row) == 4){
-    
-    KSHTORZS <- paste("000", row, sep = "")
-    
-  }
+  KSHTORZS <- str_pad(row, width = 7, pad = "0")
   
   if(CHANGED_ALL_M003_JE_JU[row, "M003_JE"] %in% CHANGED_Q02_1$M003_JE){
     
@@ -93,10 +78,10 @@ for(i in 1:nrow(Q02)){
   
   for(j in 1:ncol(Q02)){
     
-    if(Q02[i, j] != CHANGED_ON_20250423[CHANGED_ON_20250423$FILENAME == Q02[i, 2] & CHANGED_ON_20250423$SORSZAM == Q02[i, 3], j]){
+    if(Q02[i, j] != CHANGED_ON_20250509[CHANGED_ON_20250509$FILENAME == Q02[i, 2] & CHANGED_ON_20250509$SORSZAM == Q02[i, 3], j]){
       
       hiba <- hiba + 1
-      cat(paste(i, j, Q02[i, j], CHANGED_ON_20250423[CHANGED_ON_20250423$FILENAME == Q02[i, 2] & CHANGED_ON_20250423$SORSZAM == Q02[i, 3], j], sep = "\n"))
+      cat(paste(i, j, Q02[i, j], CHANGED_ON_20250509[CHANGED_ON_20250509$FILENAME == Q02[i, 2] & CHANGED_ON_20250509$SORSZAM == Q02[i, 3], j], sep = "\n"))
       
     }
     

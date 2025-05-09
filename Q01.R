@@ -1,3 +1,4 @@
+library("stringr")
 Q01 <- data.frame(matrix(NA, nrow = length(CHANGED_ALL_M003), ncol = 4))
 
 for(row in 1:length(CHANGED_ALL_M003)){
@@ -16,27 +17,7 @@ datum <- paste(substr(Sys.Date(), 1, 4), substr(Sys.Date(), 6, 7), substr(Sys.Da
 
 for(row in 1:length(CHANGED_ALL_M003)){
   
-  if(nchar(row) == 1){
-    
-    KSHTORZS <- paste("000000", row, sep = "")
-    
-  }else if(nchar(row) == 2){
-    
-    KSHTORZS <- paste("00000", row, sep = "")
-    
-  }else if(nchar(row) == 3){
-    
-    KSHTORZS <- paste("0000", row, sep = "")
-    
-  }else if(nchar(row) == 4){
-    
-    KSHTORZS <- paste("000", row, sep = "")
-    
-  }else if(nchar(row) == 5){
-    
-    KSHTORZS <- paste("00", row, sep = "")
-    
-  }
+  KSHTORZS <- str_pad(row, width = 7, pad = "0")
   
   VALUES <- sqlQuery(channelOracle, paste("select M003, M0491, TO_CHAR(M0491_H, 'YYYYMMDD') M0491_H, 
                                           M005_SZH, TO_CHAR(M005_SZH_H, 'YYYYMMDD') M005_SZH_H, nev, 
@@ -356,10 +337,10 @@ for(i in 1:nrow(Q01)){
   
   for(j in 1:ncol(Q01)){
     
-    if(Q01[i, j] != CHANGED_ON_20250423[CHANGED_ON_20250423$FILENAME == Q01[i, 2] & CHANGED_ON_20250423$SORSZAM == Q01[i, 3], j]){
+    if(Q01[i, j] != CHANGED_ON_20250509[CHANGED_ON_20250509$FILENAME == Q01[i, 2] & CHANGED_ON_20250509$SORSZAM == Q01[i, 3], j]){
       
       hiba <- hiba + 1
-      cat(paste(Q01[i, j], CHANGED_ON_20250423[CHANGED_ON_20250423$FILENAME == Q01[i, 2] & CHANGED_ON_20250423$SORSZAM == Q01[i, 3], j], sep = "\n"))
+      cat(paste(Q01[i, j], CHANGED_ON_20250509[CHANGED_ON_20250509$FILENAME == Q01[i, 2] & CHANGED_ON_20250509$SORSZAM == Q01[i, 3], j], sep = "\n"))
       cat("\n")
       cat("\n")
     }
