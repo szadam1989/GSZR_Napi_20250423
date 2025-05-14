@@ -1,15 +1,10 @@
 library("stringr")
 Q01 <- data.frame(matrix(NA, nrow = length(CHANGED_ALL_M003), ncol = 4))
 
-for(row in 1:length(CHANGED_ALL_M003)){
+Q01[, 1] <- "Q01"
+Q01[, 2] <- paste("Q01", substr(Sys.Date(), 4, 4), substr(Sys.Date(), 6, 7), substr(Sys.Date(), 9, 10), "15302724", sep = "")
+Q01[, 3] <- c(1:nrow(Q01))
   
-  Q01[row, 1] <- "Q01"
-  
-  Q01[row, 2] <- paste("Q01", substr(Sys.Date(), 4, 4), substr(Sys.Date(), 6, 7), substr(Sys.Date(), 9, 10), "15302724", sep = "")
-  
-  Q01[row, 3] <- row
-  
-}
 View(Q01)
 
 channelOracle <- odbcDriverConnect(paste("DRIVER={Oracle in OraClient18Home1};DBQ=EMERALD.KSH.HU;UID=", Sys.getenv("userid"), ";PWD=", Sys.getenv("pwd")), DBMSencoding = "ISO-8859-2")
@@ -242,7 +237,9 @@ for(row in 1:length(CHANGED_ALL_M003)){
   }else{
     
     NEV <- VALUES[1, "NEV"]#6. attribútum
+    
   }
+  
   
   if (grepl("\"", VALUES[1, "RNEV"], fixed = TRUE) || grepl("'", VALUES[1, "RNEV"], fixed = TRUE) || grepl(",", VALUES[1, "RNEV"], fixed = TRUE)){
     
@@ -252,7 +249,9 @@ for(row in 1:length(CHANGED_ALL_M003)){
   }else{
     
     RNEV <- VALUES[1, "RNEV"]
+    
   }
+  
   
   if (grepl("\"", VALUES[1, "TELNEV_SZH"], fixed = TRUE) || grepl("'", VALUES[1, "TELNEV_SZH"], fixed = TRUE) || grepl(",", VALUES[1, "TELNEV_SZH"], fixed = TRUE)){
     # || grepl(".", VALUES[1, "TELNEV_SZH"], fixed = TRUE)
@@ -268,12 +267,25 @@ for(row in 1:length(CHANGED_ALL_M003)){
     
     TELNEV_SZH <- paste("\"", TELNEV_SZH, "\"", sep = "")
     cat(paste("Vesszőt tartalmazott a TELNEV_SZH: ", VALUES[1, "M003"], "\n", sep = ""))
-    cat("\n")
     
   }else{
     
     TELNEV_SZH <- VALUES[1, "TELNEV_SZH"]
+    
   }
+  
+  
+  if (grepl("\"", VALUES[1, "TELNEV_LEV"], fixed = TRUE) || grepl("'", VALUES[1, "TELNEV_LEV"], fixed = TRUE)  || grepl(",", VALUES[1, "TELNEV_LEV"], fixed = TRUE)){
+    
+    TELNEV_LEV <- paste("\"", VALUES[1, "TELNEV_LEV"], "\"", sep = "")
+    TELNEV_LEV <- paste("\"", gsub("\"", "\"\"", VALUES[1, "TELNEV_LEV"]), "\"", sep = "")
+    
+  }else{
+    
+    TELNEV_LEV <- VALUES[1, "TELNEV_LEV"]#6. attribútum
+    
+  }
+  
   
   if (grepl("\"", VALUES[1, "UTCA_SZH"], fixed = TRUE) || grepl("'", VALUES[1, "UTCA_SZH"], fixed = TRUE) || grepl(",", VALUES[1, "UTCA_SZH"], fixed = TRUE)){
     
@@ -283,7 +295,9 @@ for(row in 1:length(CHANGED_ALL_M003)){
   }else{
 
     UTCA_SZH <- VALUES[1, "UTCA_SZH"]
+    
   }
+  
   
   if (grepl("\"", VALUES[1, "UTCA_LEV"], fixed = TRUE) || grepl("'", VALUES[1, "UTCA_LEV"], fixed = TRUE) || grepl(",", VALUES[1, "UTCA_LEV"], fixed = TRUE)){
     
@@ -293,7 +307,9 @@ for(row in 1:length(CHANGED_ALL_M003)){
   }else{
     
     UTCA_LEV <- VALUES[1, "UTCA_LEV"]
+    
   }
+  
   
   ALAKDAT <- VALUES[1, 29]
   if(VALUES[1, "M003"] == "15302724" || VALUES[1, "M003"] == "15736527"){
@@ -302,6 +318,7 @@ for(row in 1:length(CHANGED_ALL_M003)){
     cat("MNB vagy KSH alakulás dátuma 1983. január 01-re változott\n")
     
   }
+  
   
   if(nrow(CHANGED_HIST_ALAKDAT) > 0){
     
@@ -317,7 +334,7 @@ for(row in 1:length(CHANGED_ALL_M003)){
   Q01[row, 4] <- paste("Q01", datum, "15302724", datum, "E", "KSHTORZS", paste("@KSHTORZS", KSHTORZS, sep = ""), 
                        VALUES[1, "M003"], VALUES[1, "M0491"], VALUES[1, "M0491_H"], M005_SZH, VALUES[1, "M005_SZH_H"], 
                        NEV, VALUES[1, "NEV_H"], RNEV, VALUES[1, "RNEV_H"], VALUES[1, "M054_SZH"], TELNEV_SZH, UTCA_SZH, 
-                       VALUES[1, "SZEKHELY_H"], VALUES[1, "M054_LEV"], VALUES[1, "TELNEV_LEV"], UTCA_LEV, 
+                       VALUES[1, "SZEKHELY_H"], VALUES[1, "M054_LEV"], TELNEV_LEV, UTCA_LEV, 
                        VALUES[1, "LEVELEZESI_R"], VALUES[1, 18], VALUES[1, 19], PFIOK_LEV, VALUES[1, 21], 
                        VALUES[1, 22], VALUES[1, 23], M025, VALUES[1, 25],  VALUES[1, 26], ARBEV_H, 
                        M009_SZH_CDV_TOGETHER, ALAKDAT, M0781, VALUES[1, 31], M058_J, VALUES[1, 33], VALUES[1, 34], 
@@ -337,10 +354,10 @@ for(i in 1:nrow(Q01)){
   
   for(j in 1:ncol(Q01)){
     
-    if(Q01[i, j] != CHANGED_ON_20250509[CHANGED_ON_20250509$FILENAME == Q01[i, 2] & CHANGED_ON_20250509$SORSZAM == Q01[i, 3], j]){
+    if(Q01[i, j] != CHANGED_ON_20250514[CHANGED_ON_20250514$FILENAME == Q01[i, 2] & CHANGED_ON_20250514$SORSZAM == Q01[i, 3], j]){
       
       hiba <- hiba + 1
-      cat(paste(Q01[i, j], CHANGED_ON_20250509[CHANGED_ON_20250509$FILENAME == Q01[i, 2] & CHANGED_ON_20250509$SORSZAM == Q01[i, 3], j], sep = "\n"))
+      cat(paste(Q01[i, j], CHANGED_ON_20250514[CHANGED_ON_20250514$FILENAME == Q01[i, 2] & CHANGED_ON_20250514$SORSZAM == Q01[i, 3], j], sep = "\n"))
       cat("\n")
       cat("\n")
     }

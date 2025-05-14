@@ -1,15 +1,10 @@
 library("stringr")
 Q02 <- data.frame(matrix(NA, nrow = nrow(CHANGED_ALL_M003_JE_JU), ncol = 4))
 
-for(row in 1:nrow(CHANGED_ALL_M003_JE_JU)){
+Q02[, 1] <- "Q02"
+Q02[, 2] <- paste("Q02", substr(Sys.Date(), 4, 4), substr(Sys.Date(), 6, 7), substr(Sys.Date(), 9, 10), "15302724", sep = "")
+Q02[, 3] <- c(1:nrow(Q02))
   
-  Q02[row, 1] <- "Q02"
-  
-  Q02[row, 2] <- paste("Q02", substr(Sys.Date(), 4, 4), substr(Sys.Date(), 6, 7), substr(Sys.Date(), 9, 10), "15302724", sep = "")
-  
-  Q02[row, 3] <- row
-  
-}
 View(Q02)
 
 channelOracle <- odbcDriverConnect(paste("DRIVER={Oracle in OraClient18Home1};DBQ=EMERALD.KSH.HU;UID=", Sys.getenv("userid"), ";PWD=", Sys.getenv("pwd")))
