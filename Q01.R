@@ -1,4 +1,9 @@
+library("ROracle")
 library("stringr")
+
+drv <- Oracle()
+con <- dbConnect(drv, username = Sys.getenv("userid"), password = Sys.getenv("pwd"), dbname = "emerald.ksh.hu")
+
 Q01 <- data.frame(matrix(NA, nrow = length(CHANGED_ALL_M003), ncol = 4))
 
 Q01[, 1] <- "Q01"
@@ -7,14 +12,13 @@ Q01[, 3] <- c(1:nrow(Q01))
   
 View(Q01)
 
-channelOracle <- odbcDriverConnect(paste("DRIVER={Oracle in OraClient18Home1};DBQ=EMERALD.KSH.HU;UID=", Sys.getenv("userid"), ";PWD=", Sys.getenv("pwd")), DBMSencoding = "ISO-8859-2")
 datum <- paste(substr(Sys.Date(), 1, 4), substr(Sys.Date(), 6, 7), substr(Sys.Date(), 9, 10), sep = "")
 
 for(row in 1:length(CHANGED_ALL_M003)){
   
   KSHTORZS <- str_pad(row, width = 7, pad = "0")
   
-  VALUES <- sqlQuery(channelOracle, paste("select M003, M0491, TO_CHAR(M0491_H, 'YYYYMMDD') M0491_H, 
+  res <- dbSendQuery(con, paste("select M003, M0491, TO_CHAR(M0491_H, 'YYYYMMDD') M0491_H, 
                                           M005_SZH, TO_CHAR(M005_SZH_H, 'YYYYMMDD') M005_SZH_H, nev, 
                                           TO_CHAR(nev_h, 'YYYYMMDD') nev_h, rnev, TO_CHAR(rnev_h, 'YYYYMMDD') RNEV_H, 
                                           M054_SZH, TELNEV_SZH, UTCA_SZH, TO_CHAR(szekhely_h, 'YYYYMMDD') SZEKHELY_H, 
@@ -30,9 +34,10 @@ for(row in 1:length(CHANGED_ALL_M003)){
                                           case when to_char(alakdat, 'YYYY') < '2016' then '20160101' else to_char(alakdat, 'YYYYMMDD') end) MVB39_H, 
                                           null ORSZ, LETSZAM, ARBEV, M0783, to_char(M0783_H, 'YYYYMMDD') M0783_H, M0583, to_char(M0583_H, 'YYYYMMDD') M0583_H, 0 TEAOR25MILYEN, 
                                           null EELERHETOSEG_10V11, null EELERHETOSEG_10V11_HATALY, null EELERHETOSEG_60, null EELERHETOSEG_60_HATALY
-                                          from VB.F003 where M003 = '", CHANGED_ALL_M003[row], "'"), as.is = TRUE)
+                                          from VB.F003 where M003 = '", CHANGED_ALL_M003[row], "'"))
+  VALUES <- fetch(res)
+  dbClearResult(res)
   
-  VALUES[, 1:ncol(VALUES)] <- sapply(VALUES[, 1:ncol(VALUES)], as.character)
   VALUES[is.na(VALUES)] <- ""
   
   M005_SZH <- VALUES[1, "M005_SZH"]
@@ -65,10 +70,15 @@ for(row in 1:length(CHANGED_ALL_M003)){
     
   }
   
-  M009_SZH_CDV <- sqlQuery(channelOracle, paste("select M009CDV from VT.F009_AKT where M009 = '", M009_SZH, "'", sep = ""))
+  
+  res <- dbSendQuery(con, paste("select M009CDV from VT.F009_AKT where M009 = '", M009_SZH, "'", sep = ""))
+  M009_SZH_CDV <- fetch(res)
+  dbClearResult(res)
   M009_SZH_CDV_TOGETHER <- paste(M009_SZH, M009_SZH_CDV, sep = "")
   
-  ORSZ <- sqlQuery(channelOracle, paste("select ORSZ from (select * from VB_CEG.VB_APEH_CIM where M003 = '", CHANGED_ALL_M003[row], "'  order by DATUM_R desc) where rownum < 2", sep = ""))
+  res <- dbSendQuery(con, paste("select ORSZ from (select * from VB_CEG.VB_APEH_CIM where M003 = '", CHANGED_ALL_M003[row], "'  order by DATUM_R desc) where rownum < 2", sep = ""))
+  ORSZ <- fetch(res)
+  dbClearResult(res)
   
   if(nrow(ORSZ) == 0 || is.na(ORSZ) == TRUE){
     
@@ -105,7 +115,9 @@ for(row in 1:length(CHANGED_ALL_M003)){
     
   }
   
-  EELERHETOSEG_1 <- sqlQuery(channelOracle, paste("select EELERHETOSEG, TO_CHAR(HATALY, 'YYYYMMDD') HATALY from (select EELERHETOSEG, HATALY from VB.F003_EELERHETOSEG where M003 = '", CHANGED_ALL_M003[row], "' and MVB42 in ('10', '11') order by M003, HATALY desc, MVB42, DATUM_R desc offset 0 row fetch first 1 rows only)", sep = ""))
+  res <- dbSendQuery(con, paste("select EELERHETOSEG, TO_CHAR(HATALY, 'YYYYMMDD') HATALY from (select EELERHETOSEG, HATALY from VB.F003_EELERHETOSEG where M003 = '", CHANGED_ALL_M003[row], "' and MVB42 in ('10', '11') order by M003, HATALY desc, MVB42, DATUM_R desc offset 0 row fetch first 1 rows only)", sep = ""))
+  EELERHETOSEG_1 <- fetch(res)
+  dbClearResult(res)
   
   if(nrow(EELERHETOSEG_1) == 0){
     
@@ -126,8 +138,9 @@ for(row in 1:length(CHANGED_ALL_M003)){
     
   }
   
-  
-  EELERHETOSEG_2 <- sqlQuery(channelOracle, paste("select replace(EELERHETOSEG, 'hivatali', 'ceg') EELERHETOSEG, TO_CHAR(HATALY, 'YYYYMMDD') HATALY from (select EELERHETOSEG, HATALY from VB.F003_EELERHETOSEG where M003 = '", CHANGED_ALL_M003[row], "' and MVB42 = '60')", sep = ""))
+  res <- dbSendQuery(con, paste("select replace(EELERHETOSEG, 'hivatali', 'ceg') EELERHETOSEG, TO_CHAR(HATALY, 'YYYYMMDD') HATALY from (select EELERHETOSEG, HATALY from VB.F003_EELERHETOSEG where M003 = '", CHANGED_ALL_M003[row], "' and MVB42 = '60')", sep = ""))
+  EELERHETOSEG_2 <- fetch(res)
+  dbClearResult(res)
   
   if(nrow(EELERHETOSEG_2) == 0){
     
@@ -182,7 +195,9 @@ for(row in 1:length(CHANGED_ALL_M003)){
   
   if(CHANGED_ALL_M003[row] %in% CHANGED_M0582_R$M003){
     
-    M0582 <- sqlQuery(channelOracle, paste("select M0582, TO_CHAR(M0582_H, 'YYYYMMDD') M0582_H from VB.F003_M0582 where M003 = '", CHANGED_ALL_M003[row], "' and M0582_R >= TO_DATE('", LAST_RUNNING$PARAM_ERTEK, "', 'YYYY/MM/DD HH:MI:SS') order by KULDES_VEGE"))
+    res <- dbSendQuery(con, paste("select M0582, TO_CHAR(M0582_H, 'YYYYMMDD') M0582_H from VB.F003_M0582 where M003 = '", CHANGED_ALL_M003[row], "' and M0582_R >= TO_DATE('", LAST_RUNNING$PARAM_ERTEK, "', 'YYYY/MM/DD HH:MI:SS') order by KULDES_VEGE"))
+    M0582 <- fetch(res)
+    dbClearResult(res)
     M0582 <- M0582[1, ]
     M0581 <- M0582$M0582
     
@@ -347,17 +362,18 @@ for(row in 1:length(CHANGED_ALL_M003)){
 }
 View(Q01)
 
-odbcClose(channelOracle)
+dbDisconnect(con)
+gc()
 
 hiba <- 0
 for(i in 1:nrow(Q01)){
   
   for(j in 1:ncol(Q01)){
     
-    if(Q01[i, j] != CHANGED_ON_20250514[CHANGED_ON_20250514$FILENAME == Q01[i, 2] & CHANGED_ON_20250514$SORSZAM == Q01[i, 3], j]){
+    if(Q01[i, j] != CHANGED_ON_20250612[CHANGED_ON_20250612$FILENAME == Q01[i, 2] & CHANGED_ON_20250612$SORSZAM == Q01[i, 3], j]){
       
       hiba <- hiba + 1
-      cat(paste(Q01[i, j], CHANGED_ON_20250514[CHANGED_ON_20250514$FILENAME == Q01[i, 2] & CHANGED_ON_20250514$SORSZAM == Q01[i, 3], j], sep = "\n"))
+      cat(paste(Q01[i, j], CHANGED_ON_20250612[CHANGED_ON_20250612$FILENAME == Q01[i, 2] & CHANGED_ON_20250612$SORSZAM == Q01[i, 3], j], sep = "\n"))
       cat("\n")
       cat("\n")
     }
@@ -369,9 +385,12 @@ for(i in 1:nrow(Q01)){
 }
 hiba
 
-Q01[substr(Q01$X4, 60, 67) == '30053647', 4]
+Q01[substr(Q01$X4, 60, 67) == '32341272', 4] # nincs benne
+Q01[substr(Q01$X4, 60, 67) == '14756553', 4] # benne van
+# Q01,20250604,15302724,20250604,E,KSHTORZS,@KSHTORZS0000113,14756553,113,20110101,01,20160215,\"RD West Finance Korlátolt Felelősségű Társaság \"\"felszámolás alatt\"\"\",20250529,\"RD West Finance Kft. \"\"f. a.\"\"\",20250529,1134,Budapest 13. ker.,Váci út 33.,20160215,1054,Budapest 05. ker.,Kálmán Imre u. 1.,20091105,,,,,2,20250529,00,20250101,0,20250101,24299,20090504,6492,20090504,6523,20230101,S1270,20211001,,20090505,20250530,
+# 6492,20200101,0109918379,20090504,0,20160101,HU,N/A,N/A,6492,20250101,6492,20250101,0,rdwestfinance@gmail.com,20160215,14756553#cegkapu,20180614
 
-Q01_SENT <- read.delim2(file = "Q:/mnb_ebead/elkuldott/Q015042315302724", header = FALSE)
+Q01_SENT <- read.delim2(file = "Q:/mnb_ebead/elkuldott/Q015060315302724", header = FALSE)
 str(Q01_SENT)
 View(Q01_SENT)
 
@@ -383,12 +402,7 @@ for(i in 1:nrow(Q01_SENT)){
 
 Q01_REKORD <- Q01$X4
 
-# Q01_REKORD <- gsub(",\"", ",", Q01_REKORD)
-# Q01_REKORD <- gsub("\",", ",", Q01_REKORD)
-# Q01_REKORD <- gsub("\"\"", "\"", Q01_REKORD)
-# Q01_REKORD <- gsub("Ą", "Ľ", Q01_REKORD)
-# Q01_REKORD <- gsub("©", "Š", Q01_REKORD)
-write.table(Q01_REKORD, "Q015042315302724", sep = "\n", row.names = FALSE, col.names = FALSE, quote = FALSE)
+write.table(Q01_REKORD, "Q016102315302724", sep = "\n", row.names = FALSE, col.names = FALSE, quote = FALSE)
 
 # hiba <- 0
 # for(i in 1:length(Q01_REKORD)){

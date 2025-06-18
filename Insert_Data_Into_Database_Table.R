@@ -1,10 +1,10 @@
-library("RODBC")
-channelOracle <- odbcDriverConnect(paste("DRIVER={Oracle in OraClient18Home1};DBQ=EMERALD.KSH.HU;UID=", Sys.getenv("userid"), ";PWD=", Sys.getenv("pwd")))
+library("ROracle")
 
-#1. tábla
-#sqlSave(channel = channelOracle, dat = Q0102, tablename = "VB_REP.MNB_NAPI", append = TRUE, rownames = FALSE, colnames = FALSE, fast = FALSE)
+drv <- Oracle()
+con <- dbConnect(drv, username = Sys.getenv("userid"), password = Sys.getenv("pwd"), dbname = "emerald.ksh.hu")
 
-#Q02
-#sqlSave(channel = channelOracle, dat = Q02, tablename = "VB_REP.MNB_NAPI", append = TRUE, rownames = FALSE, colnames = FALSE, fast = FALSE)
+# rs <- dbSendQuery(con, "insert into VB_REP.MNB_NAPI(KOD, FILENAME, SORSZAM, REKORD) values (:1, :2, :3, :4)", data = Q0102)
+# dbCommit(con)
+# dbClearResult(rs)
 
-odbcClose(channelOracle)
+dbDisconnect(con)
